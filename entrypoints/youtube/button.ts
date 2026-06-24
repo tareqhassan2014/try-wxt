@@ -22,9 +22,9 @@ export function injectButton(
 ): HTMLButtonElement | null {
   if (document.getElementById(PANEL_BUTTON_ID)) return null;
   const button = createPanelButton(onClick);
-  // Append so the button lands at the end of the anchor — when the anchor is
-  // the masthead's #start section, that places it right after the logo,
-  // adjacent to the search box.
-  anchor.append(button);
+  // Prepend so the button becomes the first child of the anchor — when the
+  // anchor is the masthead's #center section, that places it just left of the
+  // search box, in the gap between the logo and the search box.
+  anchor.prepend(button);
   return button;
 }
