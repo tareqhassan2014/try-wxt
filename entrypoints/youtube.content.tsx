@@ -31,10 +31,11 @@ export default defineContentScript({
         console.warn('[yt-panel] masthead not found');
         return;
       }
-      const anchor =
-        mastheadEl.querySelector('#end') ?? mastheadEl.querySelector('#buttons');
+      // #start holds the guide button + YouTube logo; appending here places
+      // the button between the logo and the search box (#center).
+      const anchor = mastheadEl.querySelector('#start');
       if (!anchor) {
-        console.warn('[yt-panel] masthead anchor (#end / #buttons) not found');
+        console.warn('[yt-panel] masthead anchor (#start) not found');
         return;
       }
       injectButton(anchor, () => state.toggle());

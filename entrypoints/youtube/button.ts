@@ -14,11 +14,14 @@ export function createPanelButton(onClick: () => void): HTMLButtonElement {
 }
 
 export function injectButton(
-  masthead: Element,
+  anchor: Element,
   onClick: () => void,
 ): HTMLButtonElement | null {
   if (document.getElementById(PANEL_BUTTON_ID)) return null;
   const button = createPanelButton(onClick);
-  masthead.prepend(button);
+  // Append so the button lands at the end of the anchor — when the anchor is
+  // the masthead's #start section, that places it right after the logo,
+  // adjacent to the search box.
+  anchor.append(button);
   return button;
 }
