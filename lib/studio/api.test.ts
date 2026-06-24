@@ -24,6 +24,12 @@ describe('buildScreenRequest', () => {
     expect(body.screenConfig.entity.videoId).toBe('vid1');
     expect(body.desktopState.tabId).toBe('ANALYTICS_TAB_ID_REACH');
   });
+  it('omits Authorization header when authHeader is absent', () => {
+    const ctxNoAuth: StudioContext = { apiKey: 'KEY', innertubeContext: {} };
+    const { init } = buildScreenRequest('vid1', 'ANALYTICS_TAB_ID_OVERVIEW', ctxNoAuth);
+    expect((init.headers as Record<string, string>).Authorization).toBeUndefined();
+    expect((init.headers as Record<string, string>)['Content-Type']).toBe('application/json');
+  });
 });
 
 describe('fetchScreen', () => {
