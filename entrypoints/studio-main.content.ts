@@ -18,8 +18,9 @@ export default defineContentScript({
   runAt: 'document_start',
   main() {
     let config: StudioConfig = DEFAULT_CONFIG;
-    const ytcfg = (window as unknown as { ytcfg?: { get(k: string): unknown } }).ytcfg;
-    const capture = createContextCapture({ fetch: window.fetch.bind(window), ytcfg });
+    const capture = createContextCapture(
+      window as unknown as { fetch: typeof fetch; ytcfg?: { get(k: string): unknown } },
+    );
     capture.install();
 
     // Receive config from the ISOLATED bridge (Task 10).
