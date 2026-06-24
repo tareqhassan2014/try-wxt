@@ -50,6 +50,16 @@ describe('createContextCapture', () => {
     expect(target.fetch).toBe(orig);
   });
 
+  it('propagates original fetch rejection and calls it exactly once', async () => {
+    const networkError = new TypeError('Failed to fetch');
+    const orig = vi.fn(async () => { throw networkError; });
+    const target = { fetch: orig as unknown as typeof fetch };
+    const cap = createContextCapture(target);
+    cap.install();
+    await expect(target.fetch('https://studio.youtube.com/x')).rejects.toThrow('Failed to fetch');
+    expect(orig).toHaveBeenCalledTimes(1);
+  });
+
   it('calls through even when capture logic would error', async () => {
     const orig = vi.fn(async () => makeResponse({}));
     const target = { fetch: orig as unknown as typeof fetch };

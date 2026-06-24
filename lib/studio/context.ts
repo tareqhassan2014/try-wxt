@@ -32,24 +32,27 @@ export function createContextCapture(target: CaptureTarget = { fetch: globalThis
 
   function install(): () => void {
     target.fetch = async function (this: unknown, ...args: Parameters<typeof fetch>) {
+      const [input, init] = args;
+      // Capture auth header — non-fatal
       try {
-        const [input, init] = args;
         const auth = readAuth(init);
         if (auth) state.authHeader = auth;
-        const res = await original.apply(this, args as any);
-        try {
-          const url = typeof input === 'string' ? input : (input as Request)?.url ?? '';
-          if (res?.ok && /yta_web\/get_(screen|cards)/.test(url) && !state.innertubeContext) {
-            const body = await res.clone().json();
-            if (body?.context) state.innertubeContext = body.context;
-          }
-        } catch {
-          /* response inspection is best-effort */
-        }
-        return res;
-      } catch (err) {
-        return original.apply(this, args as any);
+      } catch {
+        /* header read is best-effort */
       }
+      // Call original exactly once; let rejections propagate unchanged
+      const res = await original.apply(this, args as any);
+      // Inspect response — non-fatal
+      try {
+        const url = typeof input === 'string' ? input : (input as Request)?.url ?? '';
+        if (res?.ok && /yta_web\/get_(screen|cards)/.test(url) && !state.innertubeContext) {
+          const body = await res.clone().json();
+          if (body?.context) state.innertubeContext = body.context;
+        }
+      } catch {
+        /* response inspection is best-effort */
+      }
+      return res;
     } as typeof fetch;
     return () => {
       target.fetch = original;
