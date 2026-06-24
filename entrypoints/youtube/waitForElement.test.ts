@@ -1,9 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { waitForElement } from './waitForElement';
 
 describe('waitForElement', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('resolves immediately when the element already exists', async () => {
@@ -30,6 +34,5 @@ describe('waitForElement', () => {
     await vi.advanceTimersByTimeAsync(1000);
     const el = await promise;
     expect(el).toBeNull();
-    vi.useRealTimers();
   });
 });
