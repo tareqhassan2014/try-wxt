@@ -1,50 +1,56 @@
 import ReactDOM from 'react-dom/client';
-import { Panel } from './youtube/panel';
-import { createToggleState } from './youtube/toggleState';
-import { injectButton } from './youtube/button';
+import '@/assets/theme.css';
+import { youtubeRegistry } from '@/surfaces/youtube/registry';
+import { ShadowRootProvider } from '@/components/overlay/ShadowRootContext';
+import { ThemeProvider } from '@/lib/theme/ThemeProvider';
+import { FilterFeature } from '@/surfaces/youtube/FilterFeature';
 import { waitForElement } from './youtube/waitForElement';
 
 export default defineContentScript({
-  matches: ['*://*.youtube.com/*'],
+  matches: youtubeRegistry.matches,
   cssInjectionMode: 'ui',
   async main(ctx) {
-    const state = createToggleState();
+    let ui: Awaited<ReturnType<typeof createShadowRootUi>> | undefined;
 
-    const ui = await createShadowRootUi(ctx, {
-      name: 'yt-panel-ui',
-      position: 'overlay',
-      anchor: 'body',
-      onMount(container) {
-        const root = ReactDOM.createRoot(container);
-        root.render(<Panel state={state} />);
-        return root;
-      },
-      onRemove(root) {
-        root?.unmount();
-      },
-    });
-    ui.mount();
+    async function mount() {
+      // Re-mount is idempotent: if our host is still attached, do nothing.
+      if (ui?.shadowHost?.isConnected) return;
 
-    async function ensureButton() {
-      const mastheadEl = await waitForElement('ytd-masthead', { timeout: 15000 });
-      if (!mastheadEl) {
-        console.warn('[yt-panel] masthead not found');
-        return;
-      }
-      // #center holds the search box; prepending here places the button just
-      // left of the search box, in the gap between the logo and the search box.
-      const anchor = mastheadEl.querySelector('#center');
+      const masthead = await waitForElement('ytd-masthead', { timeout: 15000 });
+      const anchor = masthead?.querySelector(youtubeRegistry.anchorSelector);
       if (!anchor) {
-        console.warn('[yt-panel] masthead anchor (#center) not found');
+        console.warn('[yt-filter] masthead anchor not found');
         return;
       }
-      injectButton(anchor, () => state.toggle());
+
+      ui = await createShadowRootUi(ctx, {
+        name: 'yt-filter-ui',
+        position: 'inline',
+        anchor,
+        append: youtubeRegistry.append,
+        onMount(uiContainer, _shadow, shadowHost) {
+          const root = ReactDOM.createRoot(uiContainer);
+          root.render(
+            <ShadowRootProvider container={uiContainer} host={shadowHost}>
+              <ThemeProvider surface={youtubeRegistry.theme} target={uiContainer}>
+                <FilterFeature />
+              </ThemeProvider>
+            </ShadowRootProvider>,
+          );
+          return root;
+        },
+        onRemove(root) {
+          root?.unmount();
+        },
+      });
+      ui.mount();
     }
 
-    await ensureButton();
+    await mount();
 
+    // YouTube is a SPA; if the masthead is replaced on navigation, re-mount.
     ctx.addEventListener(window, 'wxt:locationchange', () => {
-      ensureButton();
+      mount();
     });
   },
 });
