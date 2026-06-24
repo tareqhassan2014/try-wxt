@@ -15,6 +15,7 @@ export default defineContentScript({
     async function mount() {
       // Re-mount is idempotent: if our host is still attached, do nothing.
       if (ui?.shadowHost?.isConnected) return;
+      ui?.remove(); // tear down a stale UI (detached host from a prior SPA nav) before re-creating
 
       const masthead = await waitForElement('ytd-masthead', { timeout: 15000 });
       const anchor = masthead?.querySelector(youtubeRegistry.anchorSelector);

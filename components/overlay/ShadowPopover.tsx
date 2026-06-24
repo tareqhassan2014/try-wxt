@@ -13,6 +13,9 @@ const Content = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
 >(({ className, align = 'start', sideOffset = 8, onInteractOutside, ...props }, ref) => {
   const { container, host } = useShadowRoot();
+  if (!container) {
+    console.warn('[ShadowPopover] no shadow-root container in context; popover will portal to document.body and theme/styles may be wrong. Wrap in <ShadowRootProvider>.');
+  }
   return (
     <PopoverPrimitive.Portal container={container ?? undefined}>
       <PopoverPrimitive.Content
