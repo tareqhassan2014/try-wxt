@@ -1,34 +1,43 @@
-import { useState } from 'react';
-import reactLogo from '@/assets/react.svg';
-import wxtLogo from '/wxt.svg';
-import './App.css';
+import { useEffect, useState } from 'react';
+import { DEFAULT_CONFIG, type StudioConfig } from '@/lib/studio/messages';
+
+const STORAGE_KEY = 'studioConfig';
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [config, setConfig] = useState<StudioConfig>(DEFAULT_CONFIG);
+
+  useEffect(() => {
+    browser.storage.sync.get(STORAGE_KEY).then((stored) => {
+      setConfig({ ...DEFAULT_CONFIG, ...(stored[STORAGE_KEY] as Partial<StudioConfig> | undefined) });
+    });
+  }, []);
+
+  function update(patch: Partial<StudioConfig>) {
+    const next = { ...config, ...patch };
+    setConfig(next);
+    void browser.storage.sync.set({ [STORAGE_KEY]: next });
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://wxt.dev" target="_blank">
-          <img src={wxtLogo} className="logo" alt="WXT logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>WXT + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the WXT and React logos to learn more
-      </p>
-    </>
+    <div style={{ padding: 16, minWidth: 240 }}>
+      <h1 style={{ fontSize: 16 }}>Studio Performance</h1>
+      <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          type="checkbox"
+          checked={config.showCtrHundredths}
+          onChange={(e) => update({ showCtrHundredths: e.target.checked })}
+        />
+        CTR hundredths (2 decimals)
+      </label>
+      <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+        <input
+          type="checkbox"
+          checked={config.showApvHundredths}
+          onChange={(e) => update({ showApvHundredths: e.target.checked })}
+        />
+        APV hundredths (2 decimals)
+      </label>
+    </div>
   );
 }
 
