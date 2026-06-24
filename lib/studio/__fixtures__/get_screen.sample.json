@@ -1,0 +1,19 @@
+{
+  "cards": [
+    {
+      "audienceRetentionHighlightsCardData": {
+        "videosData": [
+          { "metricTotals": { "avgPercentageWatched": 0.4567 } }
+        ]
+      }
+    },
+    {
+      "keyMetricCardData": {
+        "metrics": [
+          { "label": "Impressions click-through rate", "value": "3.4567%" },
+          { "label": "Views", "value": "12,345" }
+        ]
+      }
+    }
+  ]
+}
