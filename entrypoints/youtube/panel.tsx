@@ -3,14 +3,27 @@ import type { ToggleState } from './toggleState';
 import { isOutsidePanelClick } from './outsideClick';
 import { PANEL_BUTTON_ID } from './button';
 import { computePanelPosition } from './panelPosition';
+import { readYouTubeTheme } from './panelTheme';
 import './panel.css';
 
 export function Panel({ state }: { state: ToggleState }) {
   const [open, setOpen] = useState(state.get());
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [theme, setTheme] = useState(readYouTubeTheme());
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => state.subscribe(setOpen), [state]);
+
+  useEffect(() => {
+    const sync = () => setTheme(readYouTubeTheme());
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['dark'],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -42,6 +55,7 @@ export function Panel({ state }: { state: ToggleState }) {
     <div
       ref={panelRef}
       className="yt-panel"
+      data-theme={theme}
       role="dialog"
       aria-label="Panel"
       style={pos ? { top: pos.top, left: pos.left, right: 'auto' } : undefined}
